@@ -98,7 +98,7 @@ def rag_insert():
         if rag not in unique_rags:
             unique_rags.append(rag)
     if len(unique_rags) > 0:
-        return "[Augumented Information:" + str(unique_rags) + " ] "
+        return "[Augmented Information:" + str(unique_rags) + " ] "
     else:
         return ""
 
@@ -126,7 +126,7 @@ def state_modifier(state):
     add the stop string. Also when the bot speaks as the user it is annoying,
     so fix for that. Update 8/1/2024 Seems to not be useful anymore and most models are fine without it from my testing.
     '''
-    #state['custom_stopping_strings'] = '"[AUGMENTED INFORMATION:","[Augumented Information:","[DateTime=","[24hour Average Polarity Score=","' + str(state["name1"].strip()) + ':",' + state['custom_stopping_strings'] 
+    #state['custom_stopping_strings'] = '"[AUGMENTED INFORMATION:","[Augmented Information:","[DateTime=","[24hour Average Polarity Score=","' + str(state["name1"].strip()) + ':",' + state['custom_stopping_strings'] 
     #params['state'] = state
     return state
 

@@ -135,7 +135,9 @@ class LTM():
     def get_last_summaries(self,range):
         # Retrieve all vectors
         query_vector = self.encoder.encode("").tolist()
-        all_vectors = self.qdrant.search(collection_name=self.collection, query_vector=query_vector,limit=99999999999 + 1)
+        # see if worth expanding limit, or datefilter from qdrant
+        # removed 99999 since it crashed my system
+        all_vectors = self.qdrant.search(collection_name=self.collection, query_vector=query_vector,limit=50 + 1)
         formated_results = []
         seen_comments = set()
         result_count = 0
