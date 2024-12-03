@@ -40,7 +40,10 @@ separators=["\n"], chunk_size=1000, chunk_overlap=100, keep_separator=False
              #print("----")
              now = datetime.utcnow()
              data_to_insert = str(text) + " reference:" + str(file)
-             doc_to_insert = {'comment': str(data_to_insert),'datetime': now}
+             doc_to_insert = {
+                 'comment': str(data_to_insert),
+                 'datetime': now,
+                 'rag_original_ref': os.path.basename(file)
+             }
              rag.store(doc_to_insert)
         return f"[FILE_CONTENT={file}]\n{file_content}"
-    
