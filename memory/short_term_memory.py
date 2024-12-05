@@ -62,7 +62,20 @@ class ShortTermMemory:
             values = (memory_text, people, memory_type, initiated_by, roleplay)
             self.cursor.execute(sql, values)
             self.conn.commit()
-            #print('Memory saved successfully!')
+            print('Memory saved successfully!')
+            print(f"Memory: {memory_text}")
+        except Exception as e:
+            print(e)
+        finally:
+            self.disconnect()
+    
+    def undo_last_short_memory(self):
+        try:
+            self.connect()
+            sql = "DELETE FROM short_term_memory WHERE id=(SELECT MAX(id) FROM short_term_memory)"
+            self.cursor.execute(sql)
+            self.conn.commit()
+            print('Memory deleted successfully!')
         except Exception as e:
             print(e)
         finally:

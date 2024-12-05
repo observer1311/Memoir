@@ -44,6 +44,19 @@ memoir_css = os.path.join(current_dir, "memoir.css")
 databasepath = os.path.join(current_dir, "storage/sqlite/") 
 
 
+def undo_last_memory():
+    """
+    Handles the undo of the last memory in the chat. 
+    """
+    character_name = params['current_selected_character']
+    if character_name == None:
+        print("No persona selected.")
+    else:
+        character_name_lowercase = str(character_name).lower().strip()
+        databasefile = os.path.join(databasepath, character_name_lowercase + "_sqlite.db")
+        stm = ShortTermMemory(databasefile)
+        stm.undo_last_memory()
+    pass
 
 def save_params_to_file(arg):
     params_txt = os.path.join(current_dir, "memoir_config.json") 
@@ -524,7 +537,12 @@ def ui():
 
                 save_params_button = gr.Button("Save Settings to File")
                 save_params_button.click(save_params_to_file, inputs=save_params_button, outputs=None)
-                     
+
+                # Add the undo button
+                # should later be able to do this directly when removing / replacing last generated text.
+                undo_memory_button = gr.Button("Undo Last Short-Term Memory")
+                undo_memory_button.click(undo_last_memory, inputs=None, outputs="text")
+
 
             with gr.Accordion("Memory Settings"):    
                 with gr.Row():
