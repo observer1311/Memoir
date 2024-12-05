@@ -132,12 +132,31 @@ class LTM():
         return formated_results
 
     
-    def get_last_summaries(self,range):
-        # Retrieve all vectors
+    def get_last_summaries(self, range_hours):
+        # Calculate the limit datetime
+        now = datetime.now()
+        limit_datetime = now - timedelta(hours=range_hours)
+        limit_datetime_str = limit_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+        # Retrieve vectors with a filter on datetime
         query_vector = self.encoder.encode("").tolist()
-        # see if worth expanding limit, or datefilter from qdrant
-        # removed 99999 since it crashed my system
-        all_vectors = self.qdrant.search(collection_name=self.collection, query_vector=query_vector,limit=50 + 1)
+        query_filter = {
+            "must": [
+                {
+                    "key": "datetime",
+                    "range": {
+                        "gte": limit_datetime_str
+                    }
+                }
+            ]
+        }
+        all_vectors = self.qdrant.search(
+            collection_name=self.collection,
+            query_vector=query_vector,
+            limit=10,
+            query_filter=query_filter
+        )
+
         formated_results = []
         seen_comments = set()
         result_count = 0
@@ -147,12 +166,9 @@ class LTM():
                 seen_comments.add(comment)
                 datetime_obj = datetime.strptime(result.payload['datetime'], "%Y-%m-%dT%H:%M:%S.%f")
                 date_str = datetime_obj.strftime("%Y-%m-%d")
-                now = datetime.now()
-                if now - datetime_obj <= timedelta(hours=range):
-                    if self.verbose:
-                        print("Adding memory to stm_context")
-                    formated_results.append(result.payload['comment'] + ": on " + str(date_str))
-                
+                if self.verbose:
+                    print("Adding memory to stm_context")
+                formated_results.append(result.payload['comment'] + ": on " + str(date_str))
             else:
                 if self.verbose:
                     print("Not adding " + comment)

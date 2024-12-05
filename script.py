@@ -373,7 +373,8 @@ def custom_generate_chat_prompt(user_input, state, **kwargs):
             
             for response in generate_reply(question, state, stopping_strings='"<END>","</END>"', is_chat=False, escape_html=False, for_ui=False):
                 response_text.append(response) 
-            #time.sleep(1)
+            #use this to pause for generation
+            time.sleep(2)
             if len(str(response_text[-1])) > 100:
                 dream_check = 1
                 print("Summary passed checking")
