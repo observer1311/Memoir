@@ -185,9 +185,9 @@ def input_modifier(string, state, is_chat=False):
     commands_output = None    
     #used for processing [command]'s input by the user.
     if params['dream_mode'] == 0:
-        handler = CommandHandler(databasefile,collection)
+        handler = CommandHandler(databasefile, collection)
         commands_output = handler.process_command(string)
-        if params['verbose'] == True:
+        if params['verbose']:
             print("---------COMMANDS OUTPUT----------------")
             print(commands_output)
             print("/////////--------COMMANDS OUTPUT----------------")
@@ -197,13 +197,12 @@ def input_modifier(string, state, is_chat=False):
         is_roleplay = params['is_roleplay']
         initiated_by_name = state['name1'].strip()
         
-        if params['activate_narrator'] == True:
-            if ChatHelper.check_if_narration(string) == True:
+        if params['activate_narrator']:
+            if ChatHelper.check_if_narration(string):
                 initiated_by_name = "Narrator"
                 
-        if len(string) != 0:
-            if params['memory_active'] == True:
-                stm.save_memory(string, people, memory_type='short_term', initiated_by=initiated_by_name, roleplay=is_roleplay)
+        if string and params['memory_active']:
+            stm.save_memory(string, people, memory_type='short_term', initiated_by=initiated_by_name, roleplay=is_roleplay)
         
         #inserts the qdrant vector db results from the previous bot reply and the current input.
         collection = state['name2'].strip()
@@ -214,19 +213,17 @@ def input_modifier(string, state, is_chat=False):
         address = params['qdrant_address']
         ltm = LTM(collection, ltm_limit, verbose, address=address)
         params['user_long_term_memories'] = ltm.recall(string)
-        rag = RagDataMemory(collection,rag_limit,verbose, address=address)
+        rag = RagDataMemory(collection, rag_limit, verbose, address=address)
         params['user_rag_data'] = rag.recall(string)
         
-        if len(commands_output) > 0:
-            string = string + " [" + str(commands_output) + "]"    
+        if commands_output:
+            string += f" [{commands_output}]"
         #insert rag into prefix
-        if params['botprefix_rag_enabled'] == "Disabled":
-            if params['rag_active'] == True: 
-                string = str(rag_insert()) + string
+        if params['botprefix_rag_enabled'] == "Disabled" and params['rag_active']:
+            string = str(rag_insert()) + string
         #insert memories into prefix.
-        if params['botprefix_mems_enabled'] == "Disabled":
-            if params['memory_active'] == True: 
-                string = str(memory_insert()) + string   
+        if params['botprefix_mems_enabled'] == "Disabled" and params['memory_active']:
+            string = str(memory_insert()) + string   
         print("--------current context string input modifier---------------")
         print(string)
         print("--------/end context string input modifier---------------")

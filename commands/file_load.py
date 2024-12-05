@@ -43,7 +43,17 @@ separators=["\n"], chunk_size=1000, chunk_overlap=100, keep_separator=False
              doc_to_insert = {
                  'comment': str(data_to_insert),
                  'datetime': now,
+                 'title': os.path.basename(file),
                  'rag_original_ref': os.path.basename(file)
              }
              rag.store(doc_to_insert)
         return f"[FILE_CONTENT={file}]\n{file_content}"
+
+    def review_rag(file):
+        query = {"filter": {"must": [{"key": "rag_original_ref", "match": {"value": file}}]}}
+        results = rag.retrieve(query)
+        if results:
+            for result in results:
+                print(result)
+        else:
+            print(f"No matching data found for {file}")
