@@ -24,6 +24,7 @@ class CommandHandler():
         self.character_name = character_name
         self.commands = {}
         self.command_output = {}
+        self.flags = {}
 
     def process_command(self, input_string):
         pattern = r'\[([^\[\]]+)\]'
@@ -99,7 +100,12 @@ class CommandHandler():
                     args = cmd["REVIEW_RAG"]
                     file = str(args.get("arg1"))
                     file_load_handler = File_Load(self.character_name)
-                    content = file_load_handler.review_rag(file)
-                    self.command_output["REVIEW_RAG"] = f"REVIEW_RAG: {content}"
-        
+                    results = file_load_handler.review_rag(file)
+                    content = ""
+                    for result in results:
+                        content += result + "\n"
+                    self.flags['disable_rag'] = True
+                    self.flags['direct_output'] = True
+                    self.command_output["SYSTEM"] = f"[Pause the roleplay for this task and answer like a summarization bot, from a narrator point of view] Here is an existing reference text, write an updated and revised version of this entry, in light of recent events:  {content} \n   "
+
         return "\n".join([f"{k}: {v}" for k, v in self.command_output.items()])

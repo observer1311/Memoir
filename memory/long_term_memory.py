@@ -103,7 +103,8 @@ class LTM():
         results = self.qdrant.search(
             collection_name=self.collection,
             query_vector=self.query_vector,
-            limit=self.ltm_limit + 1
+            limit=self.ltm_limit + 1,
+            score_threshold=0.1
         )
         return self.format_results_from_qdrant(results)
     
@@ -123,6 +124,10 @@ class LTM():
                 #formated_results.append("(" + result.payload['datetime'] + "Memory:" + escape(result.payload['comment']) + ",Emotions:" + escape(result.payload['emotions']) + ",People:" + escape(result.payload['people']) + ")")
                 datetime_obj = datetime.strptime(result.payload['datetime'], "%Y-%m-%dT%H:%M:%S.%f")
                 date_str = datetime_obj.strftime("%Y-%m-%d")
+                if result.score > 0.1:
+                    if self.verbose:
+                        print("score: " + str(result.score))
+                    date_str = date_str + " score: " + str(result.score) 
                 formated_results.append(result.payload['comment'] + ": on " + str(date_str))
                 
             else:
@@ -133,46 +138,61 @@ class LTM():
 
     
     def get_last_summaries(self, range_hours):
-        # Calculate the limit datetime
-        now = datetime.now()
-        limit_datetime = now - timedelta(hours=range_hours)
-        limit_datetime_str = limit_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        try:
+            # Calculate the limit datetime
+            now = datetime.now()
+            limit_datetime = now - timedelta(hours=range_hours)
+            limit_datetime_str = limit_datetime.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        except Exception as e:
+            if self.verbose:
+                print(f"Error calculating limit datetime: {e}")
+            return []
 
-        # Retrieve vectors with a filter on datetime
-        query_vector = self.encoder.encode("").tolist()
-        query_filter = {
-            "must": [
-                {
-                    "key": "datetime",
-                    "range": {
-                        "gte": limit_datetime_str
+        try:
+            # Retrieve vectors with a filter on datetime
+            query_vector = self.encoder.encode("").tolist()
+            query_filter = {
+                "must": [
+                    {
+                        "key": "datetime",
+                        "range": {
+                            "gte": limit_datetime_str
+                        }
                     }
-                }
-            ]
-        }
-        all_vectors = self.qdrant.search(
-            collection_name=self.collection,
-            query_vector=query_vector,
-            limit=10,
-            query_filter=query_filter
-        )
+                ]
+            }
+            all_vectors = self.qdrant.search(
+                collection_name=self.collection,
+                query_vector=query_vector,
+                limit=10,
+                query_filter=query_filter,
+                score_threshold=0.1
+            )
+        except Exception as e:
+            if self.verbose:
+                print(f"Error retrieving vectors: {e}")
+            return []
 
         formated_results = []
         seen_comments = set()
         result_count = 0
         for result in all_vectors:
-            comment = result.payload['comment']
-            if comment not in seen_comments:
-                seen_comments.add(comment)
-                datetime_obj = datetime.strptime(result.payload['datetime'], "%Y-%m-%dT%H:%M:%S.%f")
-                date_str = datetime_obj.strftime("%Y-%m-%d")
+            try:
+                comment = result.payload['comment']
+                if comment not in seen_comments:
+                    seen_comments.add(comment)
+                    datetime_obj = datetime.strptime(result.payload['datetime'], "%Y-%m-%dT%H:%M:%S.%f")
+                    date_str = datetime_obj.strftime("%Y-%m-%d")
+                    if self.verbose:
+                        print("Adding memory to stm_context")
+                    formated_results.append(result.payload['comment'] + ": on " + str(date_str))
+                else:
+                    if self.verbose:
+                        print("Not adding " + comment)
+                result_count += 1
+            except Exception as e:
                 if self.verbose:
-                    print("Adding memory to stm_context")
-                formated_results.append(result.payload['comment'] + ": on " + str(date_str))
-            else:
-                if self.verbose:
-                    print("Not adding " + comment)
-            result_count += 1
+                    print(f"Error processing result: {e}")
         return formated_results    
 
 

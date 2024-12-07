@@ -49,11 +49,13 @@ separators=["\n"], chunk_size=1000, chunk_overlap=100, keep_separator=False
              rag.store(doc_to_insert)
         return f"[FILE_CONTENT={file}]\n{file_content}"
 
-    def review_rag(file):
-        query = {"filter": {"must": [{"key": "rag_original_ref", "match": {"value": file}}]}}
-        results = rag.retrieve(query)
+    def review_rag(self,file):
+        address = "http://localhost:6333"
+        rag = RagDataMemory(self.character_name,1,False, address=address)
+        print(f"Reviewing RAG data for {self.character_name} : {file} ")
+        results = rag.retrieve(file)
         if results:
-            for result in results:
-                print(result)
+            return results
         else:
             print(f"No matching data found for {file}")
+            return []

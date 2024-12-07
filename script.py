@@ -44,7 +44,7 @@ memoir_css = os.path.join(current_dir, "memoir.css")
 databasepath = os.path.join(current_dir, "storage/sqlite/") 
 
 
-def undo_last_memory():
+def undo_last_memory(arg):
     """
     Handles the undo of the last memory in the chat. 
     """
@@ -230,9 +230,12 @@ def input_modifier(string, state, is_chat=False):
         params['user_rag_data'] = rag.recall(string)
         
         if commands_output:
-            string += f" [{commands_output}]"
+            if handler.flags.get('direct_output', True):
+                string += f" {commands_output}"
+            else:
+                string += f" [{commands_output}]"
         #insert rag into prefix
-        if params['botprefix_rag_enabled'] == "Disabled" and params['rag_active']:
+        if params['botprefix_rag_enabled'] == "Disabled" and params['rag_active'] and not handler.flags.get('disable_rag', True):
             string = str(rag_insert()) + string
         #insert memories into prefix.
         if params['botprefix_mems_enabled'] == "Disabled" and params['memory_active']:
@@ -541,7 +544,7 @@ def ui():
                 # Add the undo button
                 # should later be able to do this directly when removing / replacing last generated text.
                 undo_memory_button = gr.Button("Undo Last Short-Term Memory")
-                undo_memory_button.click(undo_last_memory, inputs=None, outputs="text")
+                undo_memory_button.click(undo_last_memory, inputs=undo_memory_button, outputs=None)
 
 
             with gr.Accordion("Memory Settings"):    

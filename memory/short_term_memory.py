@@ -69,7 +69,7 @@ class ShortTermMemory:
         finally:
             self.disconnect()
     
-    def undo_last_short_memory(self):
+    def undo_last_memory(self):
         try:
             self.connect()
             sql = "DELETE FROM short_term_memory WHERE id=(SELECT MAX(id) FROM short_term_memory)"

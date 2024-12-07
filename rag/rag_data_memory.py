@@ -11,7 +11,7 @@ Copyright (c) 2024 brucepro
 import random
 from datetime import datetime
 from qdrant_client import models, QdrantClient
-from qdrant_client.http.models import PointStruct
+from qdrant_client.http.models import PointStruct, Filter, FieldCondition, MatchValue
 from html import escape
 from sentence_transformers import SentenceTransformer
 
@@ -85,7 +85,7 @@ class RagDataMemory():
             print(operation_info)
 
     def get_embedding_vector(self, doc):
-        data = doc['comment']
+        data = doc['comment'] + doc['rag_original_ref']
         self.vector = self.encoder.encode(data).tolist()
         self.next_id = random.randint(0, 1e10)
         points = [
@@ -101,7 +101,29 @@ class RagDataMemory():
         results = self.qdrant.search(
             collection_name=self.collection,
             query_vector=self.query_vector,
-            limit=self.ltm_limit + 1
+            limit=self.ltm_limit + 1,
+            score_threshold=0.1
+        )
+        return self.format_results_from_qdrant(results)
+
+    def retrieve(self, input_string):
+        #filter = {"must": [{"key": "rag_original_ref", "match": {"value": input_string}}]}
+        filter = Filter(
+            must=[  # These conditions are required for search results
+                FieldCondition(
+                    key='rag_original_ref',
+                    match=MatchValue(value=input_string)
+                )
+            ]
+        )
+        print("collection name:" + self.collection)
+        self.query_vector = self.encoder.encode(input_string).tolist()
+        results = self.qdrant.search(
+            query_vector=self.query_vector,
+            collection_name=self.collection,
+            query_filter=filter,
+            limit=10,
+            score_threshold=0.1
         )
         return self.format_results_from_qdrant(results)
     
