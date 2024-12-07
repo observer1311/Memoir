@@ -36,7 +36,12 @@ class CommandHandler():
                 command_processed = True
                 print("Processing = command..." + str(cmd))
                 command_parts = cmd.split('=')
-                commands_list.append({command_parts[0]: {f"arg{i+1}": arg for i, arg in enumerate(command_parts[1].split(','))}})
+                # if parts1 contains | , split on this rather than ',' to allow for commas in the content use a variable "split_char" to store the split character
+                if "|" in command_parts[1]:
+                    split_char = "|"
+                else:
+                    split_char = ","
+                commands_list.append({command_parts[0]: {f"arg{i+1}": arg for i, arg in enumerate(command_parts[1].split(split_char))}})
             if not command_processed and ":" in cmd:
                 command_processed = True
                 print("Processing : command..." + str(cmd))
