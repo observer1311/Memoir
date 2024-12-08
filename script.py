@@ -235,7 +235,11 @@ def input_modifier(string, state, is_chat=False):
             else:
                 string += f" [{commands_output}]"
         #insert rag into prefix
-        if params['botprefix_rag_enabled'] == "Disabled" and params['rag_active'] and not handler.flags.get('disable_rag', True):
+        if handler.flags.get('disable_rag', True):
+            prevent_rag = True
+        else:
+            prevent_rag = False
+        if params['botprefix_rag_enabled'] == "Disabled" and params['rag_active'] and not prevent_rag:
             string = str(rag_insert()) + string
         #insert memories into prefix.
         if params['botprefix_mems_enabled'] == "Disabled" and params['memory_active']:

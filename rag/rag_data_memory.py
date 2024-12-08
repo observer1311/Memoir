@@ -88,6 +88,7 @@ class RagDataMemory():
         data = doc['comment'] + doc['rag_original_ref']
         self.vector = self.encoder.encode(data).tolist()
         self.next_id = random.randint(0, 1e10)
+        print ("data for embedding:" + data)
         points = [
             PointStruct(id=self.next_id,
                         vector=self.vector,
@@ -97,12 +98,12 @@ class RagDataMemory():
 
     def recall(self, query):
         self.query_vector = self.encoder.encode(query).tolist()
-
+        print('recall query:' + query)
         results = self.qdrant.search(
             collection_name=self.collection,
             query_vector=self.query_vector,
             limit=self.ltm_limit + 1,
-            score_threshold=0.1
+            # score_threshold=0.1
         )
         return self.format_results_from_qdrant(results)
 
@@ -127,6 +128,18 @@ class RagDataMemory():
         )
         return self.format_results_from_qdrant(results)
     
+    def insert_rag_data(self, title, text):
+        now = datetime.utcnow()
+        data_to_insert = str(text) + " reference:" + str(title)
+        doc_to_insert = {
+            'comment': str(data_to_insert),
+            'datetime': now,
+            'title': title,
+            'rag_original_ref': title
+        }
+        self.store(doc_to_insert)
+
+    
     def delete(self, comment_id):
         self.qdrant.delete_points(self.collection, [comment_id])
         self.logger.debug(f"Deleted comment with ID: {comment_id}")
@@ -144,7 +157,7 @@ class RagDataMemory():
                 datetime_obj = datetime.strptime(result.payload['datetime'], "%Y-%m-%dT%H:%M:%S.%f")
                 date_str = datetime_obj.strftime("%Y-%m-%d")
                 formated_results.append(result.payload['comment'] + ": on " + str(date_str))
-                
+                print("result:" + str(result.score) + result.payload['comment'])
             else:
                 if self.verbose:
                     print("Not adding " + comment)

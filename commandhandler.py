@@ -11,6 +11,7 @@ Copyright (c) 2024 brucepro
 from extensions.Memoir.persona.persona import Persona
 from extensions.Memoir.commands.urlhandler import UrlHandler
 from extensions.Memoir.commands.file_load import File_Load
+from extensions.Memoir.rag.rag_data_memory import RagDataMemory
 
 import os
 import re
@@ -110,7 +111,14 @@ class CommandHandler():
                     for result in results:
                         content += result + "\n"
                     self.flags['disable_rag'] = True
-                    self.flags['direct_output'] = True
-                    self.command_output["SYSTEM"] = f"[Pause the roleplay for this task and answer like a summarization bot, from a narrator point of view] Here is an existing reference text, write an updated and revised version of this entry, in light of recent events:  {content} \n   "
+                    self.command_output["REVIEW_RAG"] = f"REVIEW_RAG: {content}"
+                
+                if isinstance(cmd, dict) and "INSERT_RAG" in cmd:
+                    args = cmd["INSERT_RAG"]
+                    title = str(args.get("arg1"))
+                    text = str(args.get("arg2"))
+                    rag_handler = RagDataMemory(self.character_name, 10, verbose=True)
+                    rag_handler.insert_rag_data(title, text)
+                    self.command_output["INSERT_RAG"] = f"INSERT_RAG: Successfully inserted title '{title}' with text '{text}'"
 
         return "\n".join([f"{k}: {v}" for k, v in self.command_output.items()])
